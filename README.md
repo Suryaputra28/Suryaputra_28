@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Smash Court: Game Badminton</title>
 <meta name="description" content="Main badminton melawan CPU langsung di browser. Servis, lob, drop shot, dan smash. Gratis, tanpa unduhan.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,12 +51,30 @@ kbd{background:var(--surface);border:1px solid var(--line);border-bottom-width:2
 .keys{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;margin-top:16px;font-size:13px;color:#b9c4f2}
 .ov kbd{background:#1c2658;border-color:#3a4686;color:#fff}
 .chips{margin:8px 0 16px}
+html{touch-action:manipulation}body{overscroll-behavior:none;-webkit-touch-callout:none}
+.rot{display:none;margin:0 0 10px;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:14px}
+@media (pointer:coarse){#pad{display:flex;gap:6px;margin:0;padding:10px 8px;background:#060a1c}#pad div{display:flex;gap:6px;flex:1;min-width:0}#pad button{flex:1;min-width:0;height:54px;padding:0;font-size:14px;-webkit-user-select:none;user-select:none}#pad .big{flex:1.5;min-width:0}.rot{display:block}}
+@media (pointer:coarse) and (orientation:landscape){
+ html,body{height:100%;overflow:hidden}
+ .wrap{padding:0;max-width:none}
+ h1,.sub,.kb,.tools,.note,.rot{display:none}
+ .stage{position:fixed;inset:0;border:0;border-radius:0;box-shadow:none;background:#04060f;display:grid;place-items:center}
+ canvas{width:min(100%,calc((100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))*1.7778));height:auto}
+ #pad{position:absolute;left:0;right:0;bottom:0;margin:0;padding:0 max(14px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));background:none;pointer-events:none;z-index:5}
+ #pad div{flex:none;gap:10px}
+ #pad button{flex:none;pointer-events:auto;min-width:64px;height:64px;border-radius:50%;background:rgba(10,16,48,.55);border-color:rgba(255,255,255,.35);color:#fff;font-size:18px}
+ #pad .big{flex:none;min-width:86px;height:86px;background:rgba(232,72,59,.72);font-size:16px}
+ #pad button.on{background:rgba(255,210,63,.88);color:#2a1c00}
+ .ov .card{transform:scale(.88)}
+ .ov .keys{display:none}
+}
 </style>
 </head>
 <body>
 <main class="wrap">
   <h1>Smash <span>Court</span></h1>
   <p class="sub">Badminton satu lawan satu. Skor pertama yang mencapai 11 menang.</p>
+  <p class="rot">Untuk layar yang lebih luas, putar HP ke mode lanskap.</p>
   <div class="stage">
     <canvas id="c" width="800" height="450" aria-label="Arena badminton"></canvas>
     <div class="ov" id="menu"><div class="card">
@@ -73,14 +91,14 @@ kbd{background:var(--surface);border:1px solid var(--line);border-bottom-width:2
       <h2 id="ovT"></h2><p id="ovS"></p>
       <button class="go" id="again" type="button">Main lagi</button>
     </div></div>
-  </div>
-  <div id="pad" aria-label="Kontrol sentuh">
-    <div><button data-k="l" type="button">◀</button><button data-k="r" type="button">▶</button><button data-k="u" type="button">Lompat</button></div>
+    <div id="pad" aria-label="Kontrol sentuh">
+    <div><button data-k="l" type="button">◀</button><button data-k="r" type="button">▶</button><button data-k="u" type="button">▲</button></div>
     <div><button data-k="smash" type="button">Smash</button><button data-k="hit" type="button" class="big">Pukul</button></div>
   </div>
+  </div>
   <p class="kb"><kbd>←</kbd> <kbd>→</kbd> atau <kbd>A</kbd> <kbd>D</kbd> bergerak · <kbd>↑</kbd>/<kbd>W</kbd> lompat · <kbd>Spasi</kbd> pukul · <kbd>K</kbd> smash. Tahan kiri saat memukul untuk drop shot pendek, tahan kanan untuk pukulan jauh.</p>
-  <div class="tools"><span id="rl">Reli: 0</span><button class="link" id="snd" type="button">Suara: nyala</button></div>
-  <p class="note">Smash paling efektif saat kok berada tinggi, jadi lompatlah. Servis: tekan Pukul saat giliranmu.</p>
+  <div class="tools"><span id="rl">Reli: 0</span><button class="link" id="fs" type="button">Layar penuh</button><button class="link" id="snd" type="button">Suara: nyala</button></div>
+  <p class="note">Smash paling efektif saat kok berada tinggi, jadi lompatlah. Servis: tekan Pukul saat giliranmu. Di HP, pakai tombol di layar: ◀ ▶ untuk gerak, ▲ untuk lompat.</p>
 </main>
 
 <script>
@@ -310,7 +328,7 @@ function draw(){
   if(phase==="serve"){rr(250,402,300,34,17);ctx.fillStyle="rgba(5,9,30,.78)";ctx.fill();lab(server==="p"?"Servis: tekan Pukul":"CPU bersiap servis…",400,425,16,"#fff")}
   if(phase==="point"){rr(190,118,420,58,14);var bg2=ctx.createLinearGradient(190,0,610,0);bg2.addColorStop(0,"#b8221a");bg2.addColorStop(1,"#c9852a");ctx.fillStyle=bg2;ctx.fill();lab(msg,400,155,20,"#fff")}
 }
-function loop(ts){var dt=Math.min(.033,(ts-lastTs)/1000||0);lastTs=ts;update(dt);draw();requestAnimationFrame(loop)}
+function loop(ts){var v=(phase==="menu"||phase==="over")?"hidden":"visible";if(padEl.style.visibility!==v)padEl.style.visibility=v;var dt=Math.min(.033,(ts-lastTs)/1000||0);lastTs=ts;update(dt);draw();requestAnimationFrame(loop)}
 
 /* kontrol */
 var KM={ArrowLeft:"l",KeyA:"l",ArrowRight:"r",KeyD:"r",ArrowUp:"u",KeyW:"u"};
@@ -323,11 +341,21 @@ addEventListener("keydown",function(e){
 });
 addEventListener("keyup",function(e){var k=KM[e.code];if(k)keys[k]=0});
 addEventListener("blur",function(){keys.l=keys.r=keys.u=0});
+function padRel(b,k){b.classList.remove("on");if(k!=="hit"&&k!=="smash")keys[k]=0}
 document.querySelectorAll("#pad button").forEach(function(b){
   var k=b.getAttribute("data-k");
-  b.addEventListener("pointerdown",function(e){e.preventDefault();b.classList.add("on");
+  b.addEventListener("pointerdown",function(e){e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(x){}b.classList.add("on");
     if(k==="hit")playerSwing("lob");else if(k==="smash")playerSwing("smash");else keys[k]=1});
-  ["pointerup","pointerleave","pointercancel"].forEach(function(ev){b.addEventListener(ev,function(){b.classList.remove("on");if(k!=="hit"&&k!=="smash")keys[k]=0})});
+  ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){b.addEventListener(ev,function(){padRel(b,k)})});
+  b.addEventListener("contextmenu",function(e){e.preventDefault()});
+});
+var fsb=document.getElementById("fs"),stg=document.querySelector(".stage"),padEl=document.getElementById("pad");
+if(!(document.fullscreenEnabled||document.webkitFullscreenEnabled))fsb.style.display="none";
+fsb.addEventListener("click",function(){
+  var el=document.fullscreenElement||document.webkitFullscreenElement;
+  if(el){(document.exitFullscreen||document.webkitExitFullscreen).call(document);return}
+  var rq=stg.requestFullscreen||stg.webkitRequestFullscreen;
+  if(rq){var pr=rq.call(stg);if(screen.orientation&&screen.orientation.lock)Promise.resolve(pr).then(function(){return screen.orientation.lock("landscape")}).catch(function(){})}
 });
 var dbox=document.getElementById("diffs");
 DIFF.forEach(function(d,i){
@@ -344,4 +372,3 @@ requestAnimationFrame(loop);
 </script>
 </body>
 </html>
-
